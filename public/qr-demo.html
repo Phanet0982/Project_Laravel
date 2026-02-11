@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Payment Demo</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h3 class="mb-0"><i class="fas fa-qrcode me-2"></i>QR Payment Demo</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5>Merchant View (POS)</h5>
+                                <button class="btn btn-success mb-3" onclick="generateDemoQr()">
+                                    <i class="fas fa-qrcode me-2"></i>Generate Payment QR
+                                </button>
+                                <div id="merchantQr" class="text-center" style="display: none;">
+                                    <div id="qrDisplay" class="bg-white p-3 rounded d-inline-block mb-3"></div>
+                                    <p><strong>Amount:</strong> $<span id="demoAmount">25.50</span></p>
+                                    <p><strong>Reference:</strong> <span id="demoRef">PAY-20260207-ABC123</span></p>
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        This QR code would be shown to customers for scanning
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h5>Customer View</h5>
+                                <div class="mb-3">
+                                    <label class="form-label">Payment Reference</label>
+                                    <input type="text" class="form-control" id="customerRef" placeholder="Enter reference from QR">
+                                </div>
+                                <button class="btn btn-primary mb-3" onclick="simulateScan()">
+                                    <i class="fas fa-camera me-2"></i>Simulate QR Scan
+                                </button>
+                                <div id="customerView" style="display: none;">
+                                    <div class="alert alert-success">
+                                        <i class="fas fa-check-circle me-2"></i>
+                                        Payment details loaded successfully!
+                                    </div>
+                                    <p><strong>Amount to Pay:</strong> $<span id="customerAmount">0.00</span></p>
+                                    <p><strong>Merchant:</strong> Sale Management System</p>
+                                    <button class="btn btn-success" onclick="confirmPayment()">
+                                        <i class="fas fa-check me-2"></i>Confirm Payment
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function generateDemoQr() {
+            const amount = (Math.random() * 100 + 10).toFixed(2);
+            const ref = 'PAY-' + new Date().toISOString().slice(0,10).replace(/-/g,'') + '-' + Math.random().toString(36).substr(2, 8).toUpperCase();
+            
+            document.getElementById('demoAmount').textContent = amount;
+            document.getElementById('demoRef').textContent = ref;
+            document.getElementById('customerRef').value = ref;
+            
+            // Generate simple QR-like pattern
+            generateQrPattern(`Payment:${ref}|Amount:$${amount}|Merchant:Sale Management System`, 'qrDisplay');
+            
+            document.getElementById('merchantQr').style.display = 'block';
+        }
+        
+        function generateQrPattern(content, elementId) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = '';
+            
+            const container = document.createElement('div');
+            container.style.width = '150px';
+            container.style.height = '150px';
+            container.style.backgroundColor = '#000';
+            container.style.display = 'grid';
+            container.style.gridTemplateColumns = 'repeat(15, 1fr)';
+            container.style.gridTemplateRows = 'repeat(15, 1fr)';
+            container.style.gap = '1px';
+            container.style.padding = '5px';
+            
+            const seed = content.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
+            Math.seed = seed;
+            
+            for (let i = 0; i < 225; i++) {
+                const cell = document.createElement('div');
+                cell.style.backgroundColor = Math.random() > 0.5 ? '#000' : '#fff';
+                container.appendChild(cell);
+            }
+            
+            element.appendChild(container);
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'mt-2 small text-muted';
+            contentDiv.textContent = content.substring(0, 25) + '...';
+            element.appendChild(contentDiv);
+        }
+        
+        function simulateScan() {
+            const ref = document.getElementById('customerRef').value;
+            if (!ref) {
+                alert('Please enter a payment reference');
+                return;
+            }
+            
+            // Simulate loading payment details
+            document.getElementById('customerAmount').textContent = document.getElementById('demoAmount').textContent;
+            document.getElementById('customerView').style.display = 'block';
+        }
+        
+        function confirmPayment() {
+            const amount = document.getElementById('customerAmount').textContent;
+            const ref = document.getElementById('customerRef').value;
+            
+            alert(`Payment of $${amount} confirmed for reference ${ref}!\n\nIn a real system, this would connect to your payment processor.`);
+        }
+    </script>
+</body>
+</html>
