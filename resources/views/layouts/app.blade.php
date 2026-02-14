@@ -1070,8 +1070,68 @@
         
         // Alias for backward compatibility
         window.showAlert = showToast;
+
+        // Client-side PDF export helper using html2pdf
+        // options: { selector: '.table', filename: 'file', orientation: 'auto' }
+        function exportPagePDF(pageLabel, options = {}) {
+            // Choose element: specific selector or main
+            var element = document.querySelector(options.selector) || document.querySelector('main') || document.body;
+            var filename = (options.filename || (pageLabel || document.title) + '').replace(/\s+/g, '_').toLowerCase() + '.pdf';
+
+            // Temporary print styles to improve table print layout
+            var styleTag = document.createElement('style');
+            styleTag.id = 'pdf-print-styles';
+            styleTag.innerHTML = `
+                @media print { table { page-break-after:auto } tr { page-break-inside:avoid; page-break-after:auto } td, th { page-break-inside:avoid; page-break-after:auto } thead { display:table-header-group } tfoot { display:table-footer-group } }
+                table { width:100%; border-collapse: collapse; }
+                th, td { border: 1px solid #ddd; padding: 6px; }
+            `;
+            document.head.appendChild(styleTag);
+
+            // Determine orientation: auto -> use landscape when element is wider than A4 approximate px width
+            var orientation = options.orientation || 'auto';
+            if (orientation === 'auto' && element && element.scrollWidth) {
+                // Approximate A4 printable width at scale=2 and default html2canvas scale
+                var approxA4px = 900; // conservative threshold
+                orientation = element.scrollWidth > approxA4px ? 'landscape' : 'portrait';
+            }
+
+            var opt = Object.assign({
+                margin: 10,
+                filename: filename,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: orientation }
+            }, options);
+
+            if (typeof html2pdf === 'undefined') {
+                showToast('PDF export library not loaded', 'error');
+                // clean up style if present
+                var st = document.getElementById('pdf-print-styles'); if (st) st.parentNode.removeChild(st);
+                return;
+            }
+
+            try {
+                showToast('Generating PDF...', 'info');
+                html2pdf().set(opt).from(element).save().then(function() {
+                    showToast((pageLabel || 'Page') + ' exported as PDF', 'success');
+                    var st = document.getElementById('pdf-print-styles'); if (st) st.parentNode.removeChild(st);
+                }).catch(function(err) {
+                    console.error('PDF export error', err);
+                    showToast('PDF export failed', 'error');
+                    var st = document.getElementById('pdf-print-styles'); if (st) st.parentNode.removeChild(st);
+                });
+            } catch (err) {
+                console.error('PDF export exception', err);
+                showToast('PDF export failed', 'error');
+                var st = document.getElementById('pdf-print-styles'); if (st) st.parentNode.removeChild(st);
+            }
+        }
     </script>
-    
+
+    <!-- html2pdf for client-side PDF exports -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
+
     @stack('scripts')
 </body>
 </html>

@@ -206,10 +206,8 @@
     }
 
     function exportReport(type) {
-        showToast(`Exporting ${type} report...`, 'info');
-        setTimeout(() => {
-            showToast('Report exported successfully!', 'success');
-        }, 2000);
+        // Export whole report page as PDF
+        exportPagePDF('Sales Report', { filename: 'sales_report' });
     }
 </script>
 @endpush

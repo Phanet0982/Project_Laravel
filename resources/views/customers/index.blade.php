@@ -10,9 +10,6 @@
             <p class="text-muted mb-0">Manage customer relationships, track purchase history, and loyalty programs</p>
         </div>
         <div class="d-flex gap-2">
-            <button class="btn btn-outline-primary">
-                <i class="fas fa-download me-2"></i>Export
-            </button>
             <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#customerModal">
                 <i class="fas fa-user-plus me-2"></i>Add Customer
             </button>

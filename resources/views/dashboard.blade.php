@@ -10,11 +10,8 @@
             <p class="mb-0">Welcome back! Here's your business overview.</p>
         </div>
         <div class="d-flex gap-2">
-            <button class="btn btn-outline-primary">
-                <i class="fas fa-download me-2"></i>Export
-            </button>
             <button class="btn btn-primary">
-                <i class="fas fa-plus me-2"></i>New Sale
+                <i class="fas fa-plus me-2"></i>DUC
             </button>
         </div>
     </div>
@@ -89,12 +86,17 @@
             <div class="card-header">
                 <div class="d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">Recent Sales</h5>
-                    <a href="{{ route('reports.index') }}" class="btn btn-sm btn-outline-primary">View All</a>
+                    <div>
+                        <a href="{{ route('reports.index') }}" class="btn btn-sm btn-outline-primary">View All</a>
+                        <button type="button" class="btn btn-sm btn-outline-secondary ms-2" onclick="exportPagePDF('Recent Sales', { selector: '.report-table', filename: 'recent_sales' })">
+                            <i class="fas fa-file-pdf me-1"></i>Export PDF
+                        </button>
+                    </div>
                 </div>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
-                    <table class="table">
+                    <table class="table excel-table report-table">
                         <thead>
                             <tr>
                                 <th>Sale ID</th>
@@ -252,6 +254,65 @@
             flex: 0 0 100%;
             max-width: 100%;
         }
+    }
+
+    /* Excel-like table styling for exports/print */
+    .excel-table {
+        font-family: "Segoe UI", Tahoma, Calibri, Arial, sans-serif;
+        border-collapse: collapse;
+        width: 100%;
+        color: #222;
+        font-size: 0.95rem;
+    }
+
+    .excel-table th {
+        background: #0b63b6;
+        color: #fff;
+        font-weight: 600;
+        padding: 8px 10px;
+        border: 1px solid rgba(0,0,0,0.06);
+        text-align: left;
+    }
+
+    .excel-table td {
+        padding: 8px 10px;
+        border: 1px solid rgba(0,0,0,0.04);
+    }
+
+    .excel-table tbody tr:nth-child(even) {
+        background: #f4f8fb;
+    }
+
+    /* Ensure small cells stay readable when printed */
+    @media print {
+        .excel-table th, .excel-table td { padding: 6px; font-size: 0.9rem; }
+    }
+    /* Dashboard table: remove default white backgrounds and inherit card/bg */
+    .card .table,
+    .card .table thead th,
+    .card .table tbody td,
+    .table-responsive {
+        background: transparent !important;
+        color: inherit !important;
+    }
+
+
+    /* Remove bg-white or bg-light applied to cells inside dashboard tables */
+    .card .table .bg-white,
+    .card .table .bg-light {
+        background-color: transparent !important;
+        color: inherit !important;
+    }
+
+    /* Subtle borders for tables on dashboard cards to match card tone */
+    .card .table th,
+    .card .table td {
+        border-color: rgba(255,255,255,0.06) !important;
+    }
+
+    /* Ensure table stripes are subtle and match dashboard tone */
+    .card .table tbody tr:nth-child(even) {
+        background: rgba(255,255,255,0.02) !important;
     }
 </style>
 @endpush

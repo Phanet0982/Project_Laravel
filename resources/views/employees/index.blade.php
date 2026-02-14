@@ -10,9 +10,6 @@
             <p class="text-muted mb-0">Manage staff, track attendance, and monitor performance metrics</p>
         </div>
         <div class="d-flex gap-2">
-            <button class="btn btn-outline-primary">
-                <i class="fas fa-download me-2"></i>Export
-            </button>
             <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#employeeModal">
                 <i class="fas fa-user-plus me-2"></i>Add Employee
             </button>
