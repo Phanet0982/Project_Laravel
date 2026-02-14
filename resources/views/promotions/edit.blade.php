@@ -112,30 +112,5 @@
     </div>
 </div>
 
-@push('scripts')
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Date validation
-    const startDate = document.querySelector('input[name="start_date"]');
-    const endDate = document.querySelector('input[name="end_date"]');
-    
-    function validateDates() {
-        if (startDate.value && endDate.value) {
-            if (new Date(endDate.value) <= new Date(startDate.value)) {
-                endDate.setCustomValidity('End date must be after start date');
-            } else {
-                endDate.setCustomValidity('');
-            }
-        }
-    }
-    
-    startDate.addEventListener('change', validateDates);
-    endDate.addEventListener('change', validateDates);
-    
-    // Set today as minimum date for start date
-    const today = new Date().toISOString().split('T')[0];
-    startDate.min = today;
-});
-</script>
-@endpush
+
 @endsection

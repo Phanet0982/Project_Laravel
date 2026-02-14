@@ -35,9 +35,9 @@
                                 <i class="fas fa-tag me-1"></i>Promotion Name <span class="text-danger">*</span>
                             </label>
                             <input type="text" class="form-control" name="name" value="{{ old('name') }}" placeholder="e.g., Summer Sale 2024" required>
-                            @error('name')
-                                <div class="text-danger small mt-1">{{ $message }}</div>
-                            @enderror
+                            @if($errors->has('name'))
+                                <div class="text-danger small mt-1">{{ $errors->first('name') }}</div>
+                            @endif
                         </div>
                         
                         <div class="col-md-4">
@@ -48,9 +48,9 @@
                                 <input type="number" class="form-control" name="discount_percent" id="discountPercent" value="{{ old('discount_percent') }}" step="0.01" min="0" max="100" placeholder="20" required>
                                 <span class="input-group-text">%</span>
                             </div>
-                            @error('discount_percent')
-                                <div class="text-danger small mt-1">{{ $message }}</div>
-                            @enderror
+                            @if($errors->has('discount_percent'))
+                                <div class="text-danger small mt-1">{{ $errors->first('discount_percent') }}</div>
+                            @endif
                         </div>
                         
                         <!-- Date Range -->
@@ -59,9 +59,9 @@
                                 <i class="fas fa-calendar-start me-1"></i>Start Date <span class="text-danger">*</span>
                             </label>
                             <input type="date" class="form-control" name="start_date" value="{{ old('start_date') }}" required>
-                            @error('start_date')
-                                <div class="text-danger small mt-1">{{ $message }}</div>
-                            @enderror
+                            @if($errors->has('start_date'))
+                                <div class="text-danger small mt-1">{{ $errors->first('start_date') }}</div>
+                            @endif
                         </div>
                         
                         <div class="col-md-6">
@@ -69,9 +69,9 @@
                                 <i class="fas fa-calendar-end me-1"></i>End Date <span class="text-danger">*</span>
                             </label>
                             <input type="date" class="form-control" name="end_date" value="{{ old('end_date') }}" required>
-                            @error('end_date')
-                                <div class="text-danger small mt-1">{{ $message }}</div>
-                            @enderror
+                            @if($errors->has('end_date'))
+                                <div class="text-danger small mt-1">{{ $errors->first('end_date') }}</div>
+                            @endif
                         </div>
                         
                         <!-- Status -->
@@ -100,30 +100,5 @@
     </div>
 </div>
 
-@push('scripts')
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Date validation
-    const startDate = document.querySelector('input[name="start_date"]');
-    const endDate = document.querySelector('input[name="end_date"]');
-    
-    function validateDates() {
-        if (startDate.value && endDate.value) {
-            if (new Date(endDate.value) <= new Date(startDate.value)) {
-                endDate.setCustomValidity('End date must be after start date');
-            } else {
-                endDate.setCustomValidity('');
-            }
-        }
-    }
-    
-    startDate.addEventListener('change', validateDates);
-    endDate.addEventListener('change', validateDates);
-    
-    // Set today as minimum date for start date
-    const today = new Date().toISOString().split('T')[0];
-    startDate.min = today;
-});
-</script>
-@endpush
+
 @endsection

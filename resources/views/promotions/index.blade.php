@@ -58,10 +58,10 @@
                 <i class="fas fa-list me-2"></i>All Promotions
             </h5>
             <div class="btn-group" role="group">
-                <a href="{{ route('promotions.index', ['filter' => 'all']) }}" class="btn btn-outline-primary btn-sm {{ request('filter', 'all') == 'all' ? 'active' : '' }}">All</a>
-                <a href="{{ route('promotions.index', ['filter' => 'active']) }}" class="btn btn-outline-success btn-sm {{ request('filter', 'all') == 'active' ? 'active' : '' }}">Active</a>
-                <a href="{{ route('promotions.index', ['filter' => 'expired']) }}" class="btn btn-outline-danger btn-sm {{ request('filter', 'all') == 'expired' ? 'active' : '' }}">Expired</a>
-                <a href="{{ route('promotions.index', ['filter' => 'upcoming']) }}" class="btn btn-outline-warning btn-sm {{ request('filter', 'all') == 'upcoming' ? 'active' : '' }}">Upcoming</a>
+                <a href="{{ route('promotions.index', ['filter' => 'all']) }}" class="btn btn-outline-primary btn-sm {{ $filter == 'all' ? 'active' : '' }}">All</a>
+                <a href="{{ route('promotions.index', ['filter' => 'active']) }}" class="btn btn-outline-success btn-sm {{ $filter == 'active' ? 'active' : '' }}">Active</a>
+                <a href="{{ route('promotions.index', ['filter' => 'expired']) }}" class="btn btn-outline-danger btn-sm {{ $filter == 'expired' ? 'active' : '' }}">Expired</a>
+                <a href="{{ route('promotions.index', ['filter' => 'upcoming']) }}" class="btn btn-outline-warning btn-sm {{ $filter == 'upcoming' ? 'active' : '' }}">Upcoming</a>
             </div>
         </div>
     </div>

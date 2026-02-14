@@ -33,20 +33,20 @@ class Promotion extends Model
     public function scopeActive($query)
     {
         return $query->where('active', true)
-                    ->where('start_date', '<=', now())
-                    ->where('end_date', '>=', now());
+                    ->whereDate('start_date', '<=', now()->toDateString())
+                    ->whereDate('end_date', '>=', now()->toDateString());
     }
 
     // Scope for expired promotions
     public function scopeExpired($query)
     {
-        return $query->where('end_date', '<', now());
+        return $query->whereDate('end_date', '<', now()->toDateString());
     }
 
     // Scope for upcoming promotions
     public function scopeUpcoming($query)
     {
-        return $query->where('start_date', '>', now());
+        return $query->whereDate('start_date', '>', now()->toDateString());
     }
 
     // Check if promotion can still be used
@@ -61,5 +61,13 @@ class Promotion extends Model
     public function getFormattedDiscountAttribute()
     {
         return $this->discount_percent . '%';
+    }
+    
+    // Relationship with products
+    public function products()
+    {
+        return $this->belongsToMany(Product::class, 'promotion_product')
+                    ->withPivot('discount_amount')
+                    ->withTimestamps();
     }
 }

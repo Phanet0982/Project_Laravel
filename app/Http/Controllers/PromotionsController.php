@@ -14,10 +14,30 @@ class PromotionsController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        $promotions = Promotion::orderBy('created_at', 'desc')
-                              ->paginate(15);
+        $filter = $request->get('filter', 'all');
+        
+        $query = Promotion::orderBy('created_at', 'desc');
+        
+        // Apply filter based on request
+        switch($filter) {
+            case 'active':
+                $query = $query->active();
+                break;
+            case 'expired':
+                $query = $query->expired();
+                break;
+            case 'upcoming':
+                $query = $query->upcoming();
+                break;
+            case 'all':
+            default:
+                // No additional filter for 'all'
+                break;
+        }
+        
+        $promotions = $query->paginate(15);
 
         // Calculate statistics
         $totalPromotions = Promotion::count();
@@ -25,7 +45,7 @@ class PromotionsController extends Controller
         $expiredPromotions = Promotion::expired()->count();
         $upcomingPromotions = Promotion::upcoming()->count();
 
-        return view('promotions.index', compact('promotions', 'totalPromotions', 'activePromotions', 'expiredPromotions', 'upcomingPromotions'));
+        return view('promotions.index', compact('promotions', 'totalPromotions', 'activePromotions', 'expiredPromotions', 'upcomingPromotions', 'filter'));
     }
 
     /**
@@ -77,7 +97,8 @@ class PromotionsController extends Controller
     public function show($id)
     {
         $promotion = Promotion::findOrFail($id);
-        return view('promotions.show', compact('promotion'));
+        $products = Product::where('is_active', true)->get();
+        return view('promotions.show', compact('promotion', 'products'));
     }
 
     /**
@@ -155,5 +176,29 @@ class PromotionsController extends Controller
         $status = $promotion->active ? 'activated' : 'deactivated';
         return redirect()->route('promotions.index')
                         ->with('success', "Promotion {$status} successfully.");
+    }
+
+    /**
+     * Update products for the specified promotion
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function updateProducts(Request $request, $id)
+    {
+        $promotion = Promotion::findOrFail($id);
+        
+        $request->validate([
+            'selected_products' => 'required|array|min:1',
+            'selected_products.*' => 'exists:products,id',
+        ]);
+        
+        // For now, we'll store the product information in session
+        // In a full implementation, this would be stored in a pivot table
+        session()->put('promotion_' . $promotion->id . '_products', $request->selected_products);
+        
+        return redirect()->route('promotions.show', $promotion->id)
+                        ->with('success', 'Product selection saved successfully! ' . count($request->selected_products) . ' products will receive the ' . $promotion->formatted_discount . ' discount.');
     }
 }

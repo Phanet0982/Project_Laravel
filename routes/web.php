@@ -112,4 +112,5 @@ Route::middleware('auth')->group(function () {
     // Promotions
     Route::resource('promotions', PromotionsController::class);
     Route::post('/promotions/{promotion}/toggle-status', [PromotionsController::class, 'toggleStatus'])->name('promotions.toggleStatus');
+    Route::put('/promotions/{promotion}/update-products', [PromotionsController::class, 'updateProducts'])->name('promotions.updateProducts');
 });
