@@ -9,9 +9,17 @@
             <h1><i class="fas fa-tags me-3"></i>Promotions Management</h1>
             <p class="text-muted mb-0">Create and manage promotional campaigns, discounts, and special offers</p>
         </div>
-        <a href="{{ route('promotions.create') }}" class="btn btn-primary">
-            <i class="fas fa-plus me-2"></i>Add New Promotion
-        </a>
+        <div class="d-flex gap-2">
+            <a href="{{ route('products.index') }}" class="btn btn-outline-secondary btn-sm" title="View Products">
+                <i class="fas fa-box me-2"></i>Products
+            </a>
+            <a href="{{ route('pos.index') }}" class="btn btn-outline-secondary btn-sm" title="Go to POS">
+                <i class="fas fa-cash-register me-2"></i>POS
+            </a>
+            <a href="{{ route('promotions.create') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Add New Promotion
+            </a>
+        </div>
     </div>
 </div>
 
@@ -72,12 +80,10 @@
                     <thead>
                         <tr>
                             <th>Name</th>
-                            <th>Type</th>
                             <th>Discount</th>
-                            <th>Code</th>
                             <th>Period</th>
+                            <th>Associated Products</th>
                             <th>Status</th>
-                            <th>Usage</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -87,30 +93,31 @@
                                 <td>
                                     <div>
                                         <div class="fw-bold">{{ $promotion->name }}</div>
-                                        <small class="text-muted">{{ Str::limit($promotion->description, 50) }}</small>
+                                        <small class="text-muted">Created: {{ $promotion->created_at->format('M d, Y') }}</small>
                                     </div>
                                 </td>
                                 <td>
-                                    <span class="badge bg-info">{{ ucfirst(str_replace('_', ' ', $promotion->type)) }}</span>
-                                </td>
-                                <td>
-                                    <span class="fw-bold">{{ $promotion->formatted_value }}</span>
-                                    @if($promotion->minimum_amount)
-                                        <br><small class="text-muted">Min: ${{ number_format($promotion->minimum_amount, 2) }}</small>
-                                    @endif
-                                </td>
-                                <td>
-                                    @if($promotion->code)
-                                        <code>{{ $promotion->code }}</code>
-                                    @else
-                                        <span class="text-muted">N/A</span>
-                                    @endif
+                                    <span class="fw-bold text-primary">{{ $promotion->discount_percent }}%</span>
                                 </td>
                                 <td>
                                     <div>
-                                        <div>{{ $promotion->start_date->format('M d, Y') }}</div>
-                                        <small class="text-muted">to {{ $promotion->end_date->format('M d, Y') }}</small>
+                                        <div class="small">{{ $promotion->start_date->format('M d') }} - {{ $promotion->end_date->format('M d, Y') }}</div>
                                     </div>
+                                </td>
+                                <td>
+                                    @if($promotion->products->count() > 0)
+                                        <div>
+                                            <span class="badge bg-success">{{ $promotion->products->count() }} products</span>
+                                            <div class="small text-muted mt-1" style="max-width: 200px;">
+                                                {{ $promotion->products->take(2)->pluck('name')->implode(', ') }}
+                                                @if($promotion->products->count() > 2)
+                                                    +{{ $promotion->products->count() - 2 }} more
+                                                @endif
+                                            </div>
+                                        </div>
+                                    @else
+                                        <span class="badge bg-secondary">No products</span>
+                                    @endif
                                 </td>
                                 <td>
                                     @if($promotion->is_active && $promotion->start_date <= now() && $promotion->end_date >= now())
@@ -121,16 +128,6 @@
                                         <span class="badge bg-warning">Upcoming</span>
                                     @else
                                         <span class="badge bg-secondary">Inactive</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    @if($promotion->usage_limit)
-                                        <div>{{ $promotion->used_count }} / {{ $promotion->usage_limit }}</div>
-                                        <div class="progress" style="height: 5px;">
-                                            <div class="progress-bar" role="progressbar" style="width: {{ ($promotion->used_count / $promotion->usage_limit) * 100 }}%"></div>
-                                        </div>
-                                    @else
-                                        <span class="text-muted">Unlimited</span>
                                     @endif
                                 </td>
                                 <td>
@@ -147,12 +144,12 @@
                                                 <i class="fas {{ $promotion->is_active ? 'fa-toggle-on' : 'fa-toggle-off' }}"></i>
                                             </button>
                                         </form>
-                                        <form action="{{ route('promotions.destroy', $promotion->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this promotion?')">
+                                        <button type="button" class="btn btn-sm btn-outline-danger delete-promotion-btn" data-promotion-id="{{ $promotion->id }}" data-promotion-name="{{ $promotion->name }}" title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                        <form id="deleteForm-{{ $promotion->id }}" action="{{ route('promotions.destroy', $promotion->id) }}" method="POST" style="display: none;">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
                                         </form>
                                     </div>
                                 </td>
@@ -177,4 +174,34 @@
         @endif
     </div>
 </div>
+
+<script>
+// Simple delete confirmation using showConfirm (matches product page style)
+document.querySelectorAll('.delete-promotion-btn').forEach(button => {
+    button.addEventListener('click', function(e) {
+        e.preventDefault();
+        const promotionId = this.getAttribute('data-promotion-id');
+        const promotionName = this.getAttribute('data-promotion-name');
+        
+        showConfirm(
+            `Are you sure you want to delete "${promotionName}"? This action cannot be undone.`,
+            function() {
+                document.getElementById('deleteForm-' + promotionId).submit();
+            },
+            'Delete Promotion'
+        );
+    });
+});
+
+// Show success message with toast notification if exists
+@if(session('success'))
+    showToast("{{ session('success') }}", 'success');
+@endif
+
+// Show error message with toast notification if exists
+@if(session('error'))
+    showToast("{{ session('error') }}", 'error');
+@endif
+</script>
+
 @endsection

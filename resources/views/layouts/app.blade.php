@@ -742,6 +742,12 @@
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('categories.*') ? 'active' : '' }}" href="{{ route('categories.index') }}">
+                        <i class="fas fa-folder"></i>
+                        <span>Categories</span>
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link {{ request()->routeIs('promotions.*') ? 'active' : '' }}" href="{{ route('promotions.index') }}">
                         <i class="fas fa-tags"></i>
                         <span>Promotions</span>
@@ -801,6 +807,12 @@
                     <a class="nav-link {{ request()->routeIs('products.*') ? 'active' : '' }}" href="{{ route('products.index') }}">
                         <i class="fas fa-box"></i>
                         <span>Products</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('categories.*') ? 'active' : '' }}" href="{{ route('categories.index') }}">
+                        <i class="fas fa-folder"></i>
+                        <span>Categories</span>
                     </a>
                 </li>
                 <li class="nav-item">

@@ -11,6 +11,7 @@ use App\Http\Controllers\ReportsController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\PromotionsController;
+use App\Http\Controllers\CategoryController;
 
 /*
 |--------------------------------------------------------------------------
@@ -97,10 +98,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/settings/preferences', [SettingsController::class, 'updateSystemPreferences'])->name('settings.preferences.update');
     
     // Categories
-    Route::post('/categories', [SettingsController::class, 'storeCategory'])->name('categories.store');
-    Route::put('/categories/{category}', [SettingsController::class, 'updateCategory'])->name('categories.update');
-    Route::delete('/categories/{category}', [SettingsController::class, 'destroyCategory'])->name('categories.destroy');
-    Route::get('/categories/{category}', [SettingsController::class, 'showCategory'])->name('categories.show');
+    Route::resource('categories', CategoryController::class);
     
     // Suppliers - handled by resource route above
     

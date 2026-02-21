@@ -18,7 +18,7 @@ class PromotionsController extends Controller
     {
         $filter = $request->get('filter', 'all');
         
-        $query = Promotion::orderBy('created_at', 'desc');
+        $query = Promotion::with('products')->orderBy('created_at', 'desc');
         
         // Apply filter based on request
         switch($filter) {
@@ -74,6 +74,8 @@ class PromotionsController extends Controller
             'start_date' => 'required|date|after_or_equal:today',
             'end_date' => 'required|date|after:start_date',
             'active' => 'boolean',
+            'selected_products' => 'array',
+            'selected_products.*' => 'exists:products,id',
         ]);
 
         $promotion = Promotion::create([
@@ -83,6 +85,24 @@ class PromotionsController extends Controller
             'end_date' => $request->end_date,
             'active' => $request->active ?? true,
         ]);
+
+        // Attach selected products with discount amount
+        if ($request->has('selected_products') && !empty($request->selected_products)) {
+            $productIds = $request->selected_products;
+            $syncData = [];
+            
+            foreach ($productIds as $productId) {
+                $product = Product::find($productId);
+                if ($product) {
+                    $discountAmount = $product->sale_price * $request->discount_percent / 100;
+                    $syncData[$productId] = ['discount_amount' => $discountAmount];
+                }
+            }
+            
+            if (!empty($syncData)) {
+                $promotion->products()->sync($syncData);
+            }
+        }
 
         return redirect()->route('promotions.index')
                         ->with('success', 'Promotion created successfully.');
@@ -96,9 +116,10 @@ class PromotionsController extends Controller
      */
     public function show($id)
     {
-        $promotion = Promotion::findOrFail($id);
+        $promotion = Promotion::with('products')->findOrFail($id);
         $products = Product::where('is_active', true)->get();
-        return view('promotions.show', compact('promotion', 'products'));
+        $selectedProducts = $promotion->products()->pluck('products.id')->toArray();
+        return view('promotions.show', compact('promotion', 'products', 'selectedProducts'));
     }
 
     /**
@@ -109,10 +130,11 @@ class PromotionsController extends Controller
      */
     public function edit($id)
     {
-        $promotion = Promotion::findOrFail($id);
+        $promotion = Promotion::with('products')->findOrFail($id);
         $products = Product::where('is_active', true)->get();
+        $selectedProducts = $promotion->products()->pluck('products.id')->toArray();
         $categories = Category::all();
-        return view('promotions.edit', compact('promotion', 'products', 'categories'));
+        return view('promotions.edit', compact('promotion', 'products', 'selectedProducts', 'categories'));
     }
 
     /**
@@ -134,6 +156,8 @@ class PromotionsController extends Controller
             'active' => 'boolean',
         ]);
 
+        $oldDiscount = $promotion->discount_percent;
+
         $promotion->update([
             'name' => $request->name,
             'discount_percent' => $request->discount_percent,
@@ -141,6 +165,17 @@ class PromotionsController extends Controller
             'end_date' => $request->end_date,
             'active' => $request->active ?? true,
         ]);
+
+        // If discount percent changed, update pivot discount_amount for attached products
+        if ($oldDiscount != $promotion->discount_percent && $promotion->products()->count() > 0) {
+            $syncData = [];
+            foreach ($promotion->products as $product) {
+                $discountAmount = $product->sale_price * $promotion->discount_percent / 100;
+                $syncData[$product->id] = ['discount_amount' => $discountAmount];
+            }
+            // Update pivot values without detaching existing relations
+            $promotion->products()->syncWithoutDetaching($syncData);
+        }
 
         return redirect()->route('promotions.index')
                         ->with('success', 'Promotion updated successfully.');
@@ -194,9 +229,8 @@ class PromotionsController extends Controller
             'selected_products.*' => 'exists:products,id',
         ]);
         
-        // For now, we'll store the product information in session
-        // In a full implementation, this would be stored in a pivot table
-        session()->put('promotion_' . $promotion->id . '_products', $request->selected_products);
+        // Sync products with the promotion via pivot table
+        $promotion->products()->sync($request->selected_products);
         
         return redirect()->route('promotions.show', $promotion->id)
                         ->with('success', 'Product selection saved successfully! ' . count($request->selected_products) . ' products will receive the ' . $promotion->formatted_discount . ' discount.');

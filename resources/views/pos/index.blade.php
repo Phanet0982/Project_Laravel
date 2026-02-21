@@ -85,12 +85,20 @@
                     <!-- Product Grid -->
                     <div class="product-grid" id="productGrid">
                         @foreach($products as $product)
+                            @php
+                                // pick the single active promotion to apply (choose the one with largest pivot discount_amount when multiple)
+                                $activePromo = $product->promotions->sortByDesc('pivot.discount_amount')->first();
+                                $promoDiscount = $activePromo ? $activePromo->pivot->discount_amount : 0;
+                                $promoId = $activePromo ? $activePromo->id : null;
+                            @endphp
                             <div class="product-item" 
                                  data-category="{{ $product->category_id }}" 
                                  data-name="{{ strtolower($product->name) }}"
-                                 data-barcode="{{ $product->barcode ?? '' }}">
+                                 data-barcode="{{ $product->barcode ?? '' }}"
+                                 data-promotion-id="{{ $promoId ?? '' }}"
+                                 data-promotion-discount="{{ $promoDiscount }}">
                                 <div class="product-card" 
-                                     onclick="addToCart({{ $product->id }}, '{{ $product->name }}', {{ $product->sale_price }})"
+                                     onclick="addToCart({{ $product->id }}, '{{ addslashes($product->name) }}', {{ $product->sale_price }}, {{ $promoDiscount }}, {{ $promoId ?? 'null' }})"
                                      data-bs-toggle="tooltip" 
                                      title="Click to add to cart">
                                     <div class="product-image">
@@ -922,21 +930,29 @@
 <script>
 let cart = [];
 
-// Add product to cart
-function addToCart(productId, productName, price) {
-    const existingItem = cart.find(item => item.product_id === productId);
-    
+// Add product to cart (supports automatic promotion discount)
+function addToCart(productId, productName, price, promotionDiscount = 0, promotionId = null) {
+    const existingItem = cart.find(item => item.product_id === productId && item.promotion_id === promotionId);
+
+    // compute effective price per unit (apply promotion discount amount if present)
+    const originalPrice = parseFloat(price) || 0;
+    const promoDiscountPerUnit = parseFloat(promotionDiscount) || 0; // stored pivot discount_amount
+    const effectiveUnitPrice = Math.max(0, originalPrice - promoDiscountPerUnit);
+
     if (existingItem) {
         existingItem.quantity += 1;
     } else {
         cart.push({
             product_id: productId,
             name: productName,
-            price: price,
-            quantity: 1
+            original_price: originalPrice,
+            price: effectiveUnitPrice,   // price used for calculations (after promotion)
+            quantity: 1,
+            promotion_id: promotionId,
+            promotion_discount: promoDiscountPerUnit
         });
     }
-    
+
     updateCart();
     showToast(`${productName} added to cart`, 'success');
 }

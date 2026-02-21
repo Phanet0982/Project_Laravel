@@ -19,7 +19,11 @@ class POSController extends Controller
 {
     public function index()
     {
-        $products = Product::with(['category', 'supplier'])->get();
+        // Load products with category, supplier and any active promotions so POS can auto-apply discounts
+        $products = Product::with(['category', 'supplier', 'promotions' => function($q) {
+            $q->active();
+        }])->get();
+
         $customers = Customer::all();
         $categories = Category::all();
 

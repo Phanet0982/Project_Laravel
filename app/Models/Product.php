@@ -47,6 +47,14 @@ class Product extends Model
         return $this->hasMany(StockTransaction::class);
     }
 
+    // Relationship with promotions
+    public function promotions()
+    {
+        return $this->belongsToMany(Promotion::class, 'promotion_product')
+                    ->withPivot('discount_amount')
+                    ->withTimestamps();
+    }
+
     public function getImageUrlAttribute()
     {
         return $this->image ? asset('storage/' . $this->image) : null;

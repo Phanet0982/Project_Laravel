@@ -9,11 +9,6 @@
             <h1>Dashboard</h1>
             <p class="mb-0">Welcome back! Here's your business overview.</p>
         </div>
-        <div class="d-flex gap-2">
-            <button class="btn btn-primary">
-                <i class="fas fa-plus me-2"></i>DUC
-            </button>
-        </div>
     </div>
 </div>
 
